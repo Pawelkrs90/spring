@@ -10,32 +10,32 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.springframework.stereotype.Repository;
 
-@Repository
+//@Repository
 public class UserDaoImpl implements UserDao{
     
-    private static final Logger logger =  Logger.getLogger(UserDaoImpl.class);
     
     private SessionFactory sessionFactory;
-    
-    public void setSessionFactory(SessionFactory sf){
-		this.sessionFactory = sf;
-	}
+
+    public SessionFactory getSessionFactory() {
+        return sessionFactory;
+    }
+
+    public void setSessionFactory(SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
+    }
 
     @Override
     public void addUser(User user) {
     
         Session session = sessionFactory.getCurrentSession();
-        //Transaction transaction = session.getTransaction();;
-        session.persist(user);
+        Transaction transaction = session.getTransaction();
+        //session.persist(user);
         
         
-      /*  try{
+        try{
             transaction.begin();
             
-            User u = new User();
-            u.setFirstName("sdasasd");
-            session.save(u);
-            u.setLastName("dddddd");
+            session.persist(user);
             
             transaction.commit();
             
@@ -47,7 +47,7 @@ public class UserDaoImpl implements UserDao{
         } finally {
             
             session.close();
-        }*/
+        }
         
     }
 
@@ -58,11 +58,29 @@ public class UserDaoImpl implements UserDao{
 
     @Override
     public List<User> getUserList() {
-       
-        Session session = this.sessionFactory.getCurrentSession();
-		List<User> userList = session.createQuery("from User").list();
-		
-		return userList;
+        
+        Session session = sessionFactory.getCurrentSession();
+        Transaction transaction = session.getTransaction();
+
+        try{
+            transaction.begin();
+            
+           
+	    List<User> userList = session.createQuery("from User").list();
+
+            transaction.commit();
+            
+            return userList;
+        }
+        catch(Exception e){
+            
+           e.printStackTrace();
+           transaction.rollback();
+        } finally {
+            
+            session.close();
+        }
+        return null;
     }
     
 }
